@@ -83,13 +83,18 @@ def page_text(path: Path, number: int) -> str:
         return pdf.pages[number].extract_text() or ""
 
 
-def page_image(path: Path, number: int) -> str:
-    """One page as a PNG data URL, ready to send to a multimodal model."""
+def page_png(path: Path, number: int) -> bytes:
+    """One page as a PNG image."""
     with pdfplumber.open(path) as pdf:
         image = pdf.pages[number].to_image(resolution=IMAGE_RESOLUTION).original
     buffer = io.BytesIO()
     image.save(buffer, format="PNG")
-    return "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode()
+    return buffer.getvalue()
+
+
+def page_image(path: Path, number: int) -> str:
+    """One page as a PNG data URL, ready to send to a multimodal model."""
+    return "data:image/png;base64," + base64.b64encode(page_png(path, number)).decode()
 
 
 def as_text(value) -> str:
