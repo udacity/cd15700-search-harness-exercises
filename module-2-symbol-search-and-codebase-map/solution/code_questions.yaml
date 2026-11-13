@@ -1,0 +1,51 @@
+questions:
+  - id: post_empty_invoice
+    question: What happens if I try to post an invoice that has no line items on it?
+    expected_answer: Posting raises MissingLineItemError.
+    correct_if:
+      - 'MissingLineItemError'
+
+  - id: overpay_invoice
+    question: A customer sends more than an invoice's outstanding amount, and I try to apply all of it to that invoice. What error do I get?
+    expected_answer: OverclearanceError, because the amount would clear more than the invoice's uncleared amount.
+    correct_if:
+      - 'OverclearanceError'
+
+  - id: pay_unposted_invoice
+    question: Can I apply a customer payment to an invoice that hasn't been posted yet?
+    expected_answer: No. Both transactions must be posted, otherwise it raises UnpostedAssignmentError.
+    correct_if:
+      - 'UnpostedAssignmentError|unposted transaction cannot be'
+
+  - id: tax_account
+    question: I'm setting up a 16% sales tax. Which type of account must the tax use, and what error do I get if I don't give it an account at all?
+    expected_answer: A Control account. Leaving it out raises MissingTaxAccountError.
+    correct_if:
+      - '\bcontrol\b'
+      - 'MissingTaxAccountError'
+
+  - id: closed_period
+    question: What errors do I get if I date an invoice in a closed reporting period, and in one that's being adjusted?
+    expected_answer: ClosedReportingPeriodError for a closed period, and AdjustingReportingPeriodError for an adjusting period, which only accepts journal entries.
+    correct_if:
+      - 'ClosedReportingPeriodError'
+      - 'AdjustingReportingPeriodError'
+
+  - id: invoice_number_format
+    question: What does an automatically generated client invoice number look like?
+    expected_answer: The prefix IN, then the two-digit period count, a slash and a four-digit sequence number, such as IN01/0001.
+    correct_if:
+      - '\bIN\s?\d{2}/\d{4}\b|\bIN\b.*(/|slash)'
+
+  - id: bad_debt_age
+    question: How old does an unpaid invoice have to be before the aging schedule treats it as a bad debt?
+    expected_answer: Older than 365 days.
+    correct_if:
+      - '\b365\b'
+
+  - id: ledger_tamper_check
+    question: How can I check that a posted invoice's ledger entries haven't been tampered with, and which hash algorithm does that use by default?
+    expected_answer: Call Transaction.is_secure, which compares each ledger entry's stored hash with a recalculated one. The default algorithm is sha256.
+    correct_if:
+      - 'is_secure'
+      - 'sha-?256'
