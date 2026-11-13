@@ -9,4 +9,4 @@ EXTRACTIONS = RESULTS / "extractions.jsonl"
 REVIEW_QUEUE = RESULTS / "review_queue.jsonl"
 
 # Invoices whose confidence is below this go to the review queue.
-THRESHOLD = 0.6
+THRESHOLD = 0.8
