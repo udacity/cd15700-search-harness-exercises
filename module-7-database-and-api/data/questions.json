@@ -1,0 +1,74 @@
+{
+  "questions": [
+    {
+      "id": "q01",
+      "question": "How much did we invoice Kestrel Media in total?",
+      "answer": 29750.0,
+      "type": "number",
+      "sources": "ledger"
+    },
+    {
+      "id": "q02",
+      "question": "Which client did we invoice the most in the first quarter of 2026, January to March?",
+      "answer": "Bluefin Foods",
+      "type": "text",
+      "sources": "ledger"
+    },
+    {
+      "id": "q03",
+      "question": "How many bills have we received from Rivet Cloud?",
+      "answer": 4,
+      "type": "number",
+      "sources": "ledger"
+    },
+    {
+      "id": "q04",
+      "question": "How much has Bluefin Foods paid us so far?",
+      "answer": 13100.0,
+      "type": "number",
+      "sources": "ledger"
+    },
+    {
+      "id": "q05",
+      "question": "What does Orchid Travel still owe us: everything we invoiced them minus what they paid?",
+      "answer": 700.0,
+      "type": "number",
+      "sources": "ledger"
+    },
+    {
+      "id": "q06",
+      "question": "How many client invoices did we issue in September 2026?",
+      "answer": 3,
+      "type": "number",
+      "sources": "ledger"
+    },
+    {
+      "id": "q07",
+      "question": "What was our total invoiced in May 2026, in euros at the USD to EUR rate on 31 May 2026?",
+      "answer": 11336.29,
+      "type": "number",
+      "sources": "ledger + rates (2026-05-29: 0.85881)"
+    },
+    {
+      "id": "q08",
+      "question": "What is our largest single client invoice, in pounds at the USD to GBP rate on its invoice date?",
+      "answer": 4501.92,
+      "type": "number",
+      "sources": "ledger + rates (2026-02-26: 0.73802)"
+    },
+    {
+      "id": "q09",
+      "question": "How much have we been billed by Lumen Print in total, in euros at the USD to EUR rate on 30 June 2026?",
+      "answer": 4168.84,
+      "type": "number",
+      "sources": "ledger + rates (2026-06-30: 0.87765)"
+    },
+    {
+      "id": "q10",
+      "question": "What was our first invoice of 2026 worth in euros, at the USD to EUR rate on its invoice date?",
+      "answer": 2923.22,
+      "type": "number",
+      "sources": "ledger + rates (2026-01-19: 0.85977)"
+    }
+  ]
+}
