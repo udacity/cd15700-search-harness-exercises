@@ -62,7 +62,8 @@ def summarize(session: dict[str, Any]) -> dict[str, Any]:
             elif item.get("type") == "tool":
                 state = item.get("state", {})
                 output = "\n".join(c.get("text", "") for c in state.get("content", []))
-                tool_calls.append({"tool": item["name"], "status": state.get("status"), "output": output})
+                tool_calls.append({"tool": item["name"], "status": state.get("status"),
+                                   "input": state.get("input"), "output": output})
     info = session["info"]
     tokens = info["tokens"]
     return {
