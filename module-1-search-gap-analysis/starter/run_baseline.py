@@ -1,0 +1,84 @@
+"""Run the baseline tasks through the OpenCode agent, grade each run, and link
+it to its Langfuse trace."""
+
+from __future__ import annotations
+
+import re
+import sys
+from pathlib import Path
+from typing import Any
+
+import yaml
+
+# The functions every module shares live in shared/, at the top of the repo.
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from shared.agent_runs import (
+    find_trace_id,
+    langfuse_client,
+    run_agent,
+    summarize,
+    trace_url,
+)
+
+HERE = Path(__file__).resolve().parent
+CODEBASE = HERE / "python-accounting"
+TASKS_FILE = HERE / "baseline_tasks.yaml"
+
+
+def grade(task: dict[str, Any], run: dict[str, Any]) -> dict[str, bool]:
+    """Grade one run against its task. A run passes when its answer is correct and
+    grounded in a source the agent read.
+
+    A run comes from summarize() in shared/agent_runs.py: run["answer"] is the agent's final
+    text, and each entry in run["tool_calls"] has the call's "status" and "output".
+    """
+    # TODO Step 1: correct is True when the answer matches every pattern in task["correct_if"].
+    # Hint: the patterns are regular expressions, and case doesn't matter:
+    # https://docs.python.org/3/library/re.html#re.search
+    correct = ...
+    # TODO Step 2: grounded is True when every pattern also matches the output of at least one
+    # completed tool call (status "completed").
+    grounded = ...
+    # TODO Step 3: passed is True only when the run is both correct and grounded.
+    passed = ...
+    return {"correct": correct, "grounded": grounded, "passed": passed}
+
+
+def main() -> None:
+    tasks = yaml.safe_load(TASKS_FILE.read_text())["tasks"]
+    rows = []
+    with langfuse_client() as client:
+        for task in tasks:
+            print(f"Running {task['id']}...")
+            run = summarize(run_agent("baseline-agent", task["question"], CODEBASE))
+            grades = grade(task, run)
+
+            trace_id = find_trace_id(client, run["session_id"])
+
+            rows.append(
+                {
+                    "task": task["id"],
+                    "team": task["team"],
+                    **grades,
+                    "tool_calls": len(run["tool_calls"]),
+                    "tokens": run["tokens"],
+                    "cost_usd": run["cost_usd"],
+                    "latency_s": run["latency_s"],
+                    "trace_url": trace_url(client, trace_id)
+                    if trace_id
+                    else "not found",
+                }
+            )
+
+    for row in rows:
+        verdict = "PASS" if row["passed"] else "FAIL"
+        print(f"\n[{verdict}] {row['task']} ({row['team']})")
+        print(f"  correct: {row['correct']}  grounded: {row['grounded']}")
+        print(
+            f"  tool calls: {row['tool_calls']}  tokens: {row['tokens']}  cost: ${row['cost_usd']:.4f}  latency: {row['latency_s']:.1f}s"
+        )
+        print(f"  trace: {row['trace_url']}")
+
+
+if __name__ == "__main__":
+    main()
