@@ -21,5 +21,4 @@ module-6-memory-freshness/data/ci_logs/
 module-6-memory-freshness/data/sessions/
 module-6-memory-freshness/data/eval/
 module-6-memory-freshness/memory_store/
-module-8-multi-source-research/demo/runs/
-module-8-multi-source-research/solution/runs/
+module-8-multi-source-research/*/runs/
