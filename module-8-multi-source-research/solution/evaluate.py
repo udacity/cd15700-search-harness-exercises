@@ -61,8 +61,8 @@ def run_one(question: dict, config, search_tools: list) -> dict:
     result = loop.run(question["question"])
     latency = time.monotonic() - started
 
-    # Correctness: the share of the rubric's facts in the answer.
-    correct = correctness(question, result.final_text)
+    # Correctness: the share of the rubric's facts in the answer's claims. The gaps don't count.
+    correct = correctness(question, " ".join(claim.text for claim in loop.answer.claims))
     # Coverage: the share of the plan's sub-questions the last reflection found answered.
     coverage = len(loop.answered) / len(loop.plan.sub_questions)
     # Citation validity: the share of the model's citations that pointed to a real source.

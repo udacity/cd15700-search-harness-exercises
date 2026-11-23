@@ -14,7 +14,7 @@
       "question": "How many 2024 papers mention ColBERT in their title or abstract? What does late interaction mean in those papers, and which library makes ColBERT easy to use in a RAG pipeline?",
       "rubric": [
         {"fact": "10 papers in 2024", "any_of": ["10"]},
-        {"fact": "late interaction explained", "any_of": ["late interaction", "late-interaction"]},
+        {"fact": "late interaction explained", "any_of": ["token embedding", "token-level", "per-token", "each token", "every token", "MaxSim", "multi-vector"]},
         {"fact": "the library", "any_of": ["RAGatouille"]}
       ]
     },

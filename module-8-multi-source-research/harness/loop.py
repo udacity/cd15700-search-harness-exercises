@@ -109,9 +109,16 @@ class AgentLoop:
         )
         return messages + [Message(role="user", content=task)]
 
-    def _ask(self, messages: list[Message], schemas: list[dict], schema: type[BaseModel] | None = None) -> ModelResponse:
-        """One model call, counted. With a schema, the answer is in ``response.parsed``."""
-        response = self._client.complete(messages, schemas, schema)
+    def _ask(
+        self,
+        messages: list[Message],
+        schemas: list[dict],
+        schema: type[BaseModel] | None = None,
+        tool_choice: str | None = None,
+    ) -> ModelResponse:
+        """One model call, counted. With a schema, the answer is in ``response.parsed``.
+        With tool_choice="required", the model must call a tool."""
+        response = self._client.complete(messages, schemas, schema, tool_choice)
         self.turns += 1
         self.input_tokens += response.input_tokens
         self.output_tokens += response.output_tokens

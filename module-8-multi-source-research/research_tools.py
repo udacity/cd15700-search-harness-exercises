@@ -184,7 +184,7 @@ class SemanticSearch:
                 "title": metadata["title"],
                 "year": metadata["year"],
                 "distance": round(distance, 3),
-                "abstract": document.split("\n", 1)[1][:500],
+                "abstract": document.split("\n", 1)[1],
             }
             for arxiv_id, metadata, document, distance in zip(
                 result["ids"][0],

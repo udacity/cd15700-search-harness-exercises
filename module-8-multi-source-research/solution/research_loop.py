@@ -168,8 +168,9 @@ class ResearchLoop(AgentLoop):
         # TODO Step 2: ask the model, with the tool schemas, and add its turn, with its tool calls,
         # to the conversation.
         # Hint: _ask(messages, schemas, schema), from AgentLoop in harness/loop.py, makes one model
-        # call and counts its tokens.
-        response = self._ask(messages, schemas)
+        # call and counts its tokens. Pass tool_choice="required", so the model has to search: a
+        # round without a search can't make progress.
+        response = self._ask(messages, schemas, tool_choice="required")
         messages.append(
             Message(
                 role="assistant",
@@ -201,7 +202,8 @@ class ResearchLoop(AgentLoop):
         messages.append(
             Message(
                 role="user",
-                content=f"Still missing: {'; '.join(reflection.missing) or 'nothing'}.",
+                content=f"Still missing: {'; '.join(reflection.missing) or 'nothing'}. "
+                "Search for it in the next round.",
             )
         )
         return reflection

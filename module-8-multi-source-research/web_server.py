@@ -102,7 +102,7 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def log_message(self, format: str, *args) -> None:
-        print(f"web_server: {self.path}")
+        pass
 
 
 def main() -> None:

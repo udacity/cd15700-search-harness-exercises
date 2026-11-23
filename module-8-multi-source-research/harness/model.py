@@ -64,8 +64,10 @@ class ModelClient:
         messages: list[Message],
         tools: list[dict[str, Any]],
         schema: type[BaseModel] | None = None,
+        tool_choice: str | None = None,
     ) -> ModelResponse:
-        """One model call. With a schema, the answer must match it: structured output."""
+        """One model call. With a schema, the answer must match it: structured output.
+        With tool_choice="required", the model must call at least one tool."""
         request: dict[str, Any] = {
             "model": self.model,
             "messages": [_wire_message(m) for m in messages],
@@ -83,6 +85,8 @@ class ModelClient:
                 }
                 for t in tools
             ]
+            if tool_choice:
+                request["tool_choice"] = tool_choice
         if schema:
             request["response_format"] = schema
         response = self._create(request, structured=schema is not None)
