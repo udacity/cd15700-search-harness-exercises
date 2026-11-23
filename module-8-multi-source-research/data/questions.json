@@ -1,0 +1,58 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "question": "How many papers mention GraphRAG in their abstract in 2025? Which paper introduced Microsoft's GraphRAG approach, and what problem does it address? Which open-source implementations of graph-based RAG can I use?",
+      "rubric": [
+        {"fact": "69 papers in 2025", "any_of": ["69"]},
+        {"fact": "the GraphRAG paper", "any_of": ["2404.16130"]},
+        {"fact": "an open-source implementation", "any_of": ["microsoft.github.io/graphrag", "github.com/microsoft/graphrag", "github.com/HKUDS/LightRAG"]}
+      ]
+    },
+    {
+      "id": "q2",
+      "question": "How many 2024 papers mention ColBERT in their title or abstract? What does late interaction mean in those papers, and which library makes ColBERT easy to use in a RAG pipeline?",
+      "rubric": [
+        {"fact": "10 papers in 2024", "any_of": ["10"]},
+        {"fact": "late interaction explained", "any_of": ["late interaction", "late-interaction"]},
+        {"fact": "the library", "any_of": ["RAGatouille"]}
+      ]
+    },
+    {
+      "id": "q3",
+      "question": "How many papers did Jimmy Lin co-author in 2025? What is Ragnarök, one of his 2024 papers, and which Python toolkit from his research group supports both BM25 and dense retrieval?",
+      "rubric": [
+        {"fact": "18 papers in 2025", "any_of": ["18"]},
+        {"fact": "the Ragnarök paper", "any_of": ["2406.16828"]},
+        {"fact": "the toolkit", "any_of": ["Pyserini"]}
+      ]
+    },
+    {
+      "id": "q4",
+      "question": "How many 2025 papers have rerank or re-rank in their title? Which 2024 paper reranks with a large language model's attention instead of generating text, and which Python library gives one API for cross-encoder and LLM rerankers?",
+      "rubric": [
+        {"fact": "134 papers in 2025", "any_of": ["134"]},
+        {"fact": "the attention-based reranking paper", "any_of": ["2410.02642"]},
+        {"fact": "the library", "any_of": ["github.com/AnswerDotAI/rerankers", "2408.17344"]}
+      ]
+    },
+    {
+      "id": "q5",
+      "question": "How many papers have SPLADE in their title? What did SPLADE-v3 change, and which vector database documents using SPLADE sparse vectors for hybrid search?",
+      "rubric": [
+        {"fact": "5 papers", "any_of": ["5"]},
+        {"fact": "the SPLADE-v3 paper", "any_of": ["2403.06789"]},
+        {"fact": "the vector database", "any_of": ["Qdrant"]}
+      ]
+    },
+    {
+      "id": "q6",
+      "question": "Which paper introduced Ragas, and in which year? What does it evaluate without human-annotated references, and which metrics does the Ragas library offer for RAG today?",
+      "rubric": [
+        {"fact": "the Ragas paper", "any_of": ["2309.15217"]},
+        {"fact": "published in 2023", "any_of": ["2023"]},
+        {"fact": "today's RAG metrics", "any_of": ["context precision", "context recall", "response relevancy"]}
+      ]
+    }
+  ]
+}
