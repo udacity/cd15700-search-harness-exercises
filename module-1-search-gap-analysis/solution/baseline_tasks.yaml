@@ -1,0 +1,43 @@
+tasks:
+  - id: marketing_vat_rate
+    team: Marketing
+    question: We're adding Estonia to our list of supported markets. What standard VAT rate should invoices to customers in Estonia use today?
+    source_needed: A current public statement of Estonia's VAT rates, such as the Estonian Tax and Customs Board's website.
+    expected_answer: 24%, raised from 22% on 1 July 2025.
+    correct_if:
+      - '\b24\s?(%|percent)'
+
+  - id: support_correction_window
+    team: Customer Support
+    question: A customer wants an invoice corrected. Under our support policy, how many days do they have to ask, and what do we issue them?
+    source_needed: The company's internal support handbook, written as prose that may not use the same words as the question.
+    expected_answer: 45 days from the posting date, and we issue a credit note.
+    correct_if:
+      - '\b45\s+days'
+      - 'credit note'
+
+  - id: finance_vendor_invoice
+    team: Finance
+    question: Invoice INV-2041 from Lakemont Office Supply came in as a scanned PDF. What is the total due, and when is it due?
+    source_needed: The scanned PDF of the invoice in the finance inbox.
+    expected_answer: EUR 1,284.60, due on 15 March 2026.
+    correct_if:
+      - '1[,.]?284[.,]60'
+      - '(2026-03-15|15 March 2026|March 15,? 2026)'
+
+  - id: engineering_ci_triage
+    team: Engineering
+    question: Nightly CI is failing again in tests/test_aging_schedule.py. We triaged this same failure before. What workaround did we record?
+    source_needed: The notes from the team's earlier triage session.
+    expected_answer: Set TZ=UTC in the pytest step, because the runner's timezone moved dates across a reporting period boundary.
+    correct_if:
+      - 'TZ\s*=\s*"?UTC'
+
+  - id: operations_fx_conversion
+    team: Operations
+    question: We need to book a USD 1,250.00 client invoice dated 2024-01-15 in EUR. What European Central Bank reference rate applies on that date, and what is the EUR amount?
+    source_needed: A service that returns historical exchange rates on request, such as the Frankfurter API.
+    expected_answer: A rate of 0.91366, which makes EUR 1,142.08.
+    correct_if:
+      - '0\.9136|0\.9137'
+      - '1[,.]?142[.,]0[78]'
