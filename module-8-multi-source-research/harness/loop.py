@@ -109,9 +109,9 @@ class AgentLoop:
         )
         return messages + [Message(role="user", content=task)]
 
-    def _ask(self, messages: list[Message], schemas: list[dict]) -> ModelResponse:
-        """One model call, counted."""
-        response = self._client.complete(messages, schemas)
+    def _ask(self, messages: list[Message], schemas: list[dict], schema: type[BaseModel] | None = None) -> ModelResponse:
+        """One model call, counted. With a schema, the answer is in ``response.parsed``."""
+        response = self._client.complete(messages, schemas, schema)
         self.turns += 1
         self.input_tokens += response.input_tokens
         self.output_tokens += response.output_tokens

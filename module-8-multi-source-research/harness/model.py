@@ -37,10 +37,12 @@ class Message(Record):
 
 
 class ModelResponse(Record):
-    """One model turn: either text, or tool calls, or both."""
+    """One model turn: either text, or tool calls, or both. With a schema, ``parsed``
+    holds the answer as an instance of that schema."""
 
     text: str | None = None
     tool_calls: list[ToolCall] = []
+    parsed: Any = None
     input_tokens: int = 0
     output_tokens: int = 0
 
@@ -58,8 +60,12 @@ class ModelClient:
         self._client = client or OpenAI()
 
     def complete(
-        self, messages: list[Message], tools: list[dict[str, Any]]
+        self,
+        messages: list[Message],
+        tools: list[dict[str, Any]],
+        schema: type[BaseModel] | None = None,
     ) -> ModelResponse:
+        """One model call. With a schema, the answer must match it: structured output."""
         request: dict[str, Any] = {
             "model": self.model,
             "messages": [_wire_message(m) for m in messages],
@@ -77,7 +83,9 @@ class ModelClient:
                 }
                 for t in tools
             ]
-        response = self._create(request)
+        if schema:
+            request["response_format"] = schema
+        response = self._create(request, structured=schema is not None)
 
         choice = response.choices[0]
         if choice.finish_reason == "length":
@@ -92,18 +100,24 @@ class ModelClient:
             )
             for call in choice.message.tool_calls or []
         ]
+        parsed = getattr(choice.message, "parsed", None)
+        if schema and parsed is None:
+            raise ModelError(f"{self.model} didn't return a {schema.__name__}: {choice.message.content!r}")
         return ModelResponse(
             text=choice.message.content,
             tool_calls=calls,
+            parsed=parsed,
             input_tokens=response.usage.prompt_tokens if response.usage else 0,
             output_tokens=response.usage.completion_tokens if response.usage else 0,
         )
 
-    def _create(self, request: dict[str, Any], attempts: int = 2):
+    def _create(self, request: dict[str, Any], structured: bool = False, attempts: int = 2):
         """Call the API."""
+        completions = self._client.chat.completions
+        call = completions.parse if structured else completions.create
         for attempt in range(1, attempts + 1):
             try:
-                return self._client.chat.completions.create(**request)
+                return call(**request)
             except ValueError as exc:
                 if attempt == attempts:
                     raise ModelError(
