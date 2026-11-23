@@ -20,7 +20,7 @@ from urllib.parse import parse_qs, urlparse
 
 PAGES = Path(__file__).resolve().parent / "data" / "web_pages.jsonl"
 HOST, PORT = "127.0.0.1", 8765
-K1, B = 1.5, 0.75  # the usual BM25 parameters
+K1, B = 1.5, 0.75
 
 
 def tokens(text: str) -> list[str]:
@@ -40,26 +40,40 @@ class Index:
 
     def __init__(self, pages: list[dict]) -> None:
         self.pages = pages
-        self.docs = [Counter(tokens(f"{p['title']} {p['title']} {p['text']}")) for p in pages]
+        self.docs = [
+            Counter(tokens(f"{p['title']} {p['title']} {p['text']}")) for p in pages
+        ]
         self.lengths = [sum(d.values()) for d in self.docs]
         self.average = sum(self.lengths) / max(len(self.lengths), 1)
         frequency = Counter(term for d in self.docs for term in d)
         n = len(pages)
-        self.idf = {t: math.log(1 + (n - f + 0.5) / (f + 0.5)) for t, f in frequency.items()}
+        self.idf = {
+            t: math.log(1 + (n - f + 0.5) / (f + 0.5)) for t, f in frequency.items()
+        }
 
     def search(self, query: str, k: int = 5) -> list[dict]:
         terms = set(tokens(query))
         scores = []
         for i, doc in enumerate(self.docs):
             score = sum(
-                self.idf[t] * doc[t] * (K1 + 1) / (doc[t] + K1 * (1 - B + B * self.lengths[i] / self.average))
-                for t in terms if t in doc
+                self.idf[t]
+                * doc[t]
+                * (K1 + 1)
+                / (doc[t] + K1 * (1 - B + B * self.lengths[i] / self.average))
+                for t in terms
+                if t in doc
             )
             if score > 0:
                 scores.append((score, i))
         scores.sort(reverse=True)
-        return [{"url": self.pages[i]["url"], "title": self.pages[i]["title"], "text": self.pages[i]["text"]}
-                for _, i in scores[:k]]
+        return [
+            {
+                "url": self.pages[i]["url"],
+                "title": self.pages[i]["title"],
+                "text": self.pages[i]["text"],
+            }
+            for _, i in scores[:k]
+        ]
 
 
 def load_index() -> Index:
@@ -78,7 +92,9 @@ class Handler(BaseHTTPRequestHandler):
         params = parse_qs(url.query)
         query = params.get("q", [""])[0]
         k = min(int(params.get("k", ["5"])[0]), 10)
-        body = json.dumps({"query": query, "results": self.index.search(query, k)}, ensure_ascii=False).encode()
+        body = json.dumps(
+            {"query": query, "results": self.index.search(query, k)}, ensure_ascii=False
+        ).encode()
         self.send_response(200)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
@@ -91,7 +107,9 @@ class Handler(BaseHTTPRequestHandler):
 
 def main() -> None:
     Handler.index = load_index()
-    print(f"Serving {len(Handler.index.pages)} pages on http://{HOST}:{PORT}/search?q=...")
+    print(
+        f"Serving {len(Handler.index.pages)} pages on http://{HOST}:{PORT}/search?q=..."
+    )
     ThreadingHTTPServer((HOST, PORT), Handler).serve_forever()
 
 
