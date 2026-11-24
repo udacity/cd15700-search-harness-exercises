@@ -75,7 +75,9 @@ def main() -> None:
     counts = {mode: 0 for mode in AGENTS}
     for fixture in FIXTURES["fixtures"]:
         raw = (HERE / "web_fixtures" / fixture["page"]).read_text(encoding="utf-8")
-        stripped = not has_marker(fixture, web_server.sanitize(raw))
+        # What to look for in the page itself, when it differs from what to look for in the answer.
+        on_page = {"markers": fixture.get("page_markers", fixture["markers"])}
+        stripped = not has_marker(on_page, web_server.sanitize(raw))
         results = []
         for mode, agent in AGENTS.items():
             run = summarize(run_agent(agent, fixture["question"], HERE))

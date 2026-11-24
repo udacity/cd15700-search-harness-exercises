@@ -16,7 +16,7 @@ import httpx
 from fastmcp import FastMCP
 
 # The fixture server stands in for the public web. It runs locally
-# so it's the one local address we allow. A real deployment wouldn't need this.
+# so it's the one local address we allow.
 SITE = ("127.0.0.1", 8766)
 SEARCH_URL = "http://127.0.0.1:8766/search"
 MAX_PAGE_CHARS = 12_000
@@ -78,15 +78,20 @@ def naive_fetch(url: str) -> str:
     return all_text(response.text)[:MAX_PAGE_CHARS]
 
 
-def is_hidden(tag: str, attrs: dict) -> bool:
+def is_hidden(attrs: dict) -> bool:
     """Whether an element is hidden from people reading the page."""
-    # TODO: treat the hidden attribute, aria-hidden="true" and hiding styles as hidden
+    # TODO Step 1: get the element's style without spaces and in lowercase, so "Display: None"
+    # matches "display:none".
+    # An element without a style attribute has an empty style.
     style = (attrs.get("style") or "").replace(" ", "").lower()
-    return (
+    # TODO Step 2: the element is hidden when it has the hidden attribute, aria-hidden="true", or
+    # one of the HIDDEN_STYLES in its style.
+    hidden = (
         "hidden" in attrs
         or attrs.get("aria-hidden") == "true"
         or any(hiding in style for hiding in HIDDEN_STYLES)
     )
+    return hidden
 
 
 class VisibleText(HTMLParser):
@@ -101,15 +106,20 @@ class VisibleText(HTMLParser):
     def handle_starttag(self, tag: str, attrs: list) -> None:
         if tag in VOID_TAGS:
             return
-        # TODO: remember whether each open element is skipped (scripts, styles) or hidden
-        self.open_tags.append(tag in SKIPPED_TAGS or is_hidden(tag, dict(attrs)))
+        # TODO: add to open_tags whether this element is skipped (a tag in SKIPPED_TAGS) or hidden.
+        # handle_endtag removes it when the element closes, so open_tags always describes the
+        # elements around the text being read.
+        # Hint: attrs arrives as a list of (name, value) pairs:
+        # https://docs.python.org/3/library/html.parser.html#html.parser.HTMLParser.handle_starttag
+        self.open_tags.append(tag in SKIPPED_TAGS or is_hidden(dict(attrs)))
 
     def handle_endtag(self, tag: str) -> None:
         if tag not in VOID_TAGS and self.open_tags:
             self.open_tags.pop()
 
     def handle_data(self, data: str) -> None:
-        # TODO: keep text only when no open element is skipped or hidden
+        # TODO: add the text, stripped, to parts, unless it's empty or one of the open elements
+        # is skipped or hidden.
         if not any(self.open_tags) and data.strip():
             self.parts.append(data.strip())
 
@@ -123,12 +133,37 @@ def sanitize(html: str) -> str:
 
 def wrap_untrusted(text: str, url: str) -> str:
     """Mark page text as untrusted data, so the model doesn't treat it as instructions."""
-    # TODO: remove any copy of our tags from the page, so it can't close the block early
+    # TODO Step 1: a page could close our block early by containing "</untrusted_content>"
+    # itself. Escape any copy of our opening or closing tag in the text, for example by
+    # replacing its "<" with "&lt;".
     text = text.replace("<untrusted_content", "&lt;untrusted_content").replace(
         "</untrusted_content", "&lt;/untrusted_content"
     )
-    # TODO: wrap the text in <untrusted_content> tags that name the source
-    return f'<untrusted_content source="{url}">\n{text}\n</untrusted_content>'
+    # TODO Step 2: return the text wrapped in tags that name its source, like:
+    # <untrusted_content source="https://example.com/pricing">
+    # ...the page text...
+    # </untrusted_content>
+    text_with_tags = f'<untrusted_content source="{url}">\n{text}\n</untrusted_content>'
+    return text_with_tags
+
+
+def resolve(
+    hostname: str, port: int
+) -> set[ipaddress.IPv4Address | ipaddress.IPv6Address]:
+    """Every address a hostname resolves to. An IPv4 address wrapped in an IPv6 one, like
+    ::ffff:127.0.0.1, comes back as the IPv4 address it wraps, so it's checked as one."""
+    try:
+        infos = socket.getaddrinfo(hostname, port)
+    except socket.gaierror as error:
+        raise ValueError(f"Blocked: {hostname} doesn't resolve.") from error
+    addresses = set()
+    for info in infos:
+        # An IPv6 address can end with a network interface, like fe80::1%eth0.
+        ip = ipaddress.ip_address(info[4][0].split("%")[0])
+        if ip.version == 6 and ip.ipv4_mapped:
+            ip = ip.ipv4_mapped
+        addresses.add(ip)
+    return addresses
 
 
 def check_url(url: str) -> None:
@@ -139,16 +174,11 @@ def check_url(url: str) -> None:
     port = parts.port or (443 if parts.scheme == "https" else 80)
     if (parts.hostname, port) == SITE:
         return
-    # TODO: resolve the hostname, and check every address it resolves to
-    try:
-        addresses = {info[4][0] for info in socket.getaddrinfo(parts.hostname, port)}
-    except socket.gaierror as error:
-        raise ValueError(f"Blocked {url}: the hostname doesn't resolve.") from error
-    for address in addresses:
-        ip = ipaddress.ip_address(address.split("%")[0])
-        if ip.version == 6 and ip.ipv4_mapped:
-            ip = ip.ipv4_mapped
-        # TODO: reject private, loopback, link-local and other non-public addresses
+    # TODO: raise a ValueError that says why the URL was blocked when any address the hostname
+    # resolves to, from resolve(), isn't public: private, loopback, link-local, unspecified,
+    # reserved or multicast.
+    # Hint: https://docs.python.org/3/library/ipaddress.html#ipaddress.IPv4Address.is_private
+    for ip in resolve(parts.hostname, port):
         if (
             ip.is_private
             or ip.is_loopback
@@ -163,11 +193,24 @@ def check_url(url: str) -> None:
 
 
 def get_checked(url: str) -> str:
-    """Download a page, checking the URL before every request, including after redirects."""
-    # TODO: follow redirects yourself, so check_url runs on every address
+    """Download a page, checking the URL before every request, including after redirects.
+
+    A redirect is a server's answer that a page has moved, with the new address in its
+    Location header. An attacker can pass a URL that check_url allows and that redirects inside
+    our network, like http://127.0.0.1:8766/redirect?to=http://127.0.0.1:8767/admin. If httpx
+    followed redirects itself, check_url would only check the URL the agent asked for, never
+    the internal address it redirects to.
+    """
+    # One request for the page, plus one for each redirect, up to MAX_REDIRECTS.
     for _ in range(MAX_REDIRECTS + 1):
+        # TODO Step 1: check the URL with check_url, then download it without following redirects.
+        # Hint: https://www.python-httpx.org/quickstart/#redirection-and-history
         check_url(url)
         response = httpx.get(url, follow_redirects=False, timeout=TIMEOUT_S)
+        # TODO Step 2: when the response is a redirect, move to the URL in its Location header and
+        # go round the loop again. Otherwise, return the page's text.
+        # Hint: the Location can be relative to the current URL:
+        # https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urljoin
         if response.is_redirect:
             url = urljoin(url, response.headers["location"])
             continue

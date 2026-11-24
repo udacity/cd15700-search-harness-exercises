@@ -5,8 +5,6 @@ internal admin service that an SSRF attack would try to reach.
     http://127.0.0.1:8766/search?q=...     a keyword search over them
     http://127.0.0.1:8766/redirect?to=...  an open redirect, as some real sites have
     http://127.0.0.1:8767/admin            the internal service, never meant to be fetched
-
-Run it on its own with `python3 fixture_server.py`, or let run_defenses.py start it.
 """
 
 from __future__ import annotations
@@ -36,7 +34,13 @@ class PublicSite(BaseHTTPRequestHandler):
     def log_message(self, *args) -> None:
         pass
 
-    def send(self, status: int, body: str, content_type: str = "text/html", headers: dict | None = None) -> None:
+    def send(
+        self,
+        status: int,
+        body: str,
+        content_type: str = "text/html",
+        headers: dict | None = None,
+    ) -> None:
         data = body.encode()
         self.send_response(status)
         self.send_header("content-type", f"{content_type}; charset=utf-8")
@@ -58,13 +62,22 @@ class PublicSite(BaseHTTPRequestHandler):
                 text = page_text(html)
                 score = sum((title + " " + text).lower().count(word) for word in words)
                 if score:
-                    results.append({"title": title, "url": f"http://{HOST}:{PUBLIC_PORT}/{page.name}", "snippet": text[:200], "score": score})
+                    results.append(
+                        {
+                            "title": title,
+                            "url": f"http://{HOST}:{PUBLIC_PORT}/{page.name}",
+                            "snippet": text[:200],
+                            "score": score,
+                        }
+                    )
             results.sort(key=lambda result: -result["score"])
             self.send(200, json.dumps({"results": results[:5]}), "application/json")
         elif url.path == "/redirect":
             self.send(302, "", headers={"location": params.get("to", ["/"])[0]})
         elif (FIXTURES / url.path.lstrip("/")).is_file() and url.path.endswith(".html"):
-            self.send(200, (FIXTURES / url.path.lstrip("/")).read_text(encoding="utf-8"))
+            self.send(
+                200, (FIXTURES / url.path.lstrip("/")).read_text(encoding="utf-8")
+            )
         else:
             self.send(404, "Not found")
 
@@ -83,5 +96,7 @@ def start() -> None:
 
 if __name__ == "__main__":
     start()
-    print(f"Fixtures on http://{HOST}:{PUBLIC_PORT}, internal service on http://{HOST}:{INTERNAL_PORT}. Ctrl+C to stop.")
+    print(
+        f"Fixtures on http://{HOST}:{PUBLIC_PORT}, internal service on http://{HOST}:{INTERNAL_PORT}. Ctrl+C to stop."
+    )
     threading.Event().wait()
