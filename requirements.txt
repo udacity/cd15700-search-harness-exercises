@@ -1,0 +1,4 @@
+pdfplumber==0.11.10         # module 5: reading PDFs
+editdistance==0.8.1         # module 5: VRDU's match functions
+langfuse==5.1.0             # module 8: tracing the harness
+ipykernel==7.4.0            # running the demo notebooks

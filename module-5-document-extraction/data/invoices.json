@@ -1,0 +1,164 @@
+{
+  "invoices": [
+    {
+      "file": "414817-collect-files-53928-political-file-2012-non.pdf",
+      "kind": "scanned",
+      "role": "demo"
+    },
+    {
+      "file": "f4134faa-3183-9843-02f8-30794296ddcc.pdf",
+      "kind": "digital",
+      "role": "demo"
+    },
+    {
+      "file": "22dd7e4a-3f0b-25e9-10bd-5ce1e652126c.pdf",
+      "kind": "digital",
+      "role": "eval"
+    },
+    {
+      "file": "ac511bf9-10cd-dffa-c005-7e260b527e13.pdf",
+      "kind": "digital",
+      "role": "eval"
+    },
+    {
+      "file": "abf2f735-74bf-ee22-e217-5e64c7e70221.pdf",
+      "kind": "digital",
+      "role": "eval"
+    },
+    {
+      "file": "271ea37f-e7a4-3802-d855-8784c3cb74d3.pdf",
+      "kind": "digital",
+      "role": "eval"
+    },
+    {
+      "file": "4f34dc05-eb8f-88f8-aa6a-587156f190f2.pdf",
+      "kind": "digital",
+      "role": "eval"
+    },
+    {
+      "file": "433948-collect-files-1328-political-file-2012-federal.pdf",
+      "kind": "scanned",
+      "role": "eval"
+    },
+    {
+      "file": "a8aaf9d5-22d3-eb99-08db-5145501e79f6.pdf",
+      "kind": "digital",
+      "role": "eval"
+    },
+    {
+      "file": "417792-collect-files-72076-political-file-2012-non.pdf",
+      "kind": "scanned",
+      "role": "eval"
+    },
+    {
+      "file": "d85d7647-d621-54e9-7b8b-fabcef269f3d.pdf",
+      "kind": "digital",
+      "role": "eval"
+    },
+    {
+      "file": "348812cb-8af7-56bc-8a19-c3c4f6682392.pdf",
+      "kind": "digital",
+      "role": "eval"
+    },
+    {
+      "file": "36cdd72e-8e53-2f4d-7aaa-e646a0a87acc.pdf",
+      "kind": "scanned",
+      "role": "eval"
+    },
+    {
+      "file": "588b6439-12ea-3176-9c43-bfeed0983fea.pdf",
+      "kind": "digital",
+      "role": "eval"
+    },
+    {
+      "file": "434392-collect-files-56549-political-file-2012-federal.pdf",
+      "kind": "scanned",
+      "role": "eval"
+    },
+    {
+      "file": "416441-collect-files-72300-political-file-2012-non.pdf",
+      "kind": "scanned",
+      "role": "eval"
+    },
+    {
+      "file": "463146-allen-west-1011124-13499874180374-_-pdf.pdf",
+      "kind": "scanned",
+      "role": "eval"
+    },
+    {
+      "file": "4aa5a616-ecf6-2e90-004a-f1ceff18f2c0.pdf",
+      "kind": "digital",
+      "role": "eval"
+    },
+    {
+      "file": "e92e9977-b08c-2fe5-6276-f0e10d5d63c0.pdf",
+      "kind": "digital",
+      "role": "eval"
+    },
+    {
+      "file": "434240-collect-files-51568-political-file-2012-non.pdf",
+      "kind": "scanned",
+      "role": "eval"
+    },
+    {
+      "file": "45406305-6782-34b4-1231-67d6483a93dd.pdf",
+      "kind": "digital",
+      "role": "eval"
+    },
+    {
+      "file": "463974-kovr-nrcc-r-multi-ord33720-fed-natl-contract.pdf",
+      "kind": "scanned",
+      "role": "eval"
+    },
+    {
+      "file": "1f279e59-7876-b9e2-5a37-73c702d12541.pdf",
+      "kind": "digital",
+      "role": "eval"
+    },
+    {
+      "file": "6cf5e99b-5c05-f5cc-733c-a4c97a15a73e.pdf",
+      "kind": "digital",
+      "role": "eval"
+    },
+    {
+      "file": "495004-rigell-549694-wgnt-10-25-12-13516293172278-_-pdf.pdf",
+      "kind": "scanned",
+      "role": "eval"
+    },
+    {
+      "file": "462537-4073029-1-13498881057828-_-pdf.pdf",
+      "kind": "scanned",
+      "role": "eval"
+    },
+    {
+      "file": "c55fb5ec-8d44-80b4-a4cf-c8b888e60708.pdf",
+      "kind": "digital",
+      "role": "eval"
+    },
+    {
+      "file": "6701250d-dd0b-70e8-8b33-6092a23cdbbb.pdf",
+      "kind": "digital",
+      "role": "eval"
+    },
+    {
+      "file": "462499-wbz-nrcc-richard-tisei-housemacd6-ord58654-fed.pdf",
+      "kind": "scanned",
+      "role": "eval"
+    },
+    {
+      "file": "433942-collect-files-1328-political-file-2012-federal.pdf",
+      "kind": "scanned",
+      "role": "eval"
+    },
+    {
+      "file": "414978-collect-files-25453-political-file-2012-non.pdf",
+      "kind": "scanned",
+      "role": "eval"
+    },
+    {
+      "file": "632bbd2e-1365-9774-e425-4b47c10b0b0a.pdf",
+      "kind": "digital",
+      "role": "eval"
+    }
+  ]
+}
