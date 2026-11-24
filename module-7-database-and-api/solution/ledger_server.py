@@ -63,7 +63,7 @@ def authorize(action, table, column, database, trigger) -> int:
 def check_statement(sql: str) -> None:
     """Refuse every query except read queries, before it reaches the database. A read
     query is a single statement that starts with SELECT, or with WITH, which names a
-    sub-query before the SELECT. Anything else, like DELETE, DROP or PRAGMA, is refused.
+    sub-query before the SELECT. Anything else, like DELETE or DROP, is refused.
     """
     # Comments are removed first, so a DELETE can't hide behind one.
     statement = (
@@ -72,10 +72,12 @@ def check_statement(sql: str) -> None:
         .rstrip(";")
         .strip()
     )
-    # TODO Step 1: refuse more than one statement: a semicolon left in the middle means a second one.
+    # TODO Step 1: refuse more than one statement, by raising a ValueError that says why.
+    # Hint: a semicolon left in the middle means a second one.
     if ";" in statement:
         raise ValueError("Only one statement is allowed.")
-    # TODO Step 2: refuse anything that doesn't start with SELECT or WITH.
+    # TODO Step 2: refuse anything that doesn't start with SELECT or WITH, by raising a ValueError
+    # that says why.
     if not re.match(r"(?i)^(select|with)\b", statement):
         raise ValueError("Only SELECT queries are allowed. The ledger is read-only.")
 
@@ -95,6 +97,9 @@ def tables_for(question: str) -> list[str]:
     )
 
 
+# TODO: write the description the model sees, as the docstring. It should say what the tool
+# returns, the SQL that creates each table the question needs, and that the model should read it
+# before writing a query.
 @mcp.tool
 def get_schema(question: str) -> str:
     """The ledger tables you need for a question, with the SQL that creates each one.
@@ -107,17 +112,17 @@ def get_schema(question: str) -> str:
         rows = db.execute(
             "SELECT name, sql FROM sqlite_master WHERE type = 'table'"
         ).fetchall()
-    # TODO Prune the database schema using tables_for and return only the tables
-    # needed for the question
-    wanted = set(tables_for(question))
-    return "\n\n".join(sql for name, sql in rows if name in wanted) + (
+    # TODO: prune the schema: keep the SQL of only the tables tables_for gives for the question,
+    # separated by a blank line.
+    schema = "\n\n".join(sql for name, sql in rows if name in set(tables_for(question)))
+    return schema + (
         '\n\nNote: "transaction" is a reserved word in SQL, so write it in double quotes.'
     )
 
 
 def limit_time(db: sqlite3.Connection) -> None:
     """Stop any query on this connection that runs longer than TIMEOUT_S."""
-    # TODO Step 1: work out the deadline. Use time.monotonic(),
+    # TODO Step 1: work out the deadline. Use time.monotonic().
     # TODO Step 2: set a progress handler that returns 1 once the deadline has passed, and 0 before.
     # The handler should run every 1000 instructions.
     # Hint: see https://docs.python.org/3/library/sqlite3.html#sqlite3.Connection.set_progress_handler
@@ -166,8 +171,6 @@ class RetryCounter:
 
     def failed(self) -> bool:
         """Count one more failure. Returns whether the model may still retry."""
-        # TODO: count the failure. The model may retry while there have been at most
-        # max_retries failures in a row.
         self.failures_in_a_row += 1
         return self.failures_in_a_row <= self.max_retries
 
@@ -186,23 +189,25 @@ def as_retry(error: Exception) -> dict:
     The model gets MAX_RETRIES chances to correct its query. After that, it should
     stop and tell the user, rather than keep guessing.
     """
+    message = str(error)
     # TODO Step 1: SQLite's errors for a refused table and a timeout don't say what to change,
     # so replace them with a message that does.
-    message = str(error)
     if message == "not authorized" or message.startswith("access to"):
         message = f"Only these tables can be read: {', '.join(sorted(ALLOWED_TABLES))}."
     elif message == "interrupted":
         message = f"The query ran longer than {TIMEOUT_S:g} seconds and was stopped. Simplify it."
     # TODO Step 2: count the failure with retries. If the model may still retry, tell it to fix
     # the query and try once more. Otherwise, tell it to stop and tell the user.
-    if retries.failed():
-        return {"error": message, "instruction": "Fix the query and try once more."}
-    return {
-        "error": message,
-        "instruction": "Stop retrying, and tell the user the query failed.",
-    }
+    instruction = (
+        "Fix the query and try once more."
+        if retries.failed()
+        else "Stop retrying, and tell the user the query failed."
+    )
+    return {"error": message, "instruction": instruction}
 
-
+# TODO: write the description the model sees, as the docstring. It should say that the tool runs
+# one SELECT query, returns at most MAX_ROWS rows, and gives the error back when a query fails,
+# so the model can correct it once.
 @mcp.tool
 def run_query(sql: str) -> dict:
     """Run one SELECT query on the ledger, which is SQLite. Returns at most 50 rows.
@@ -213,7 +218,8 @@ def run_query(sql: str) -> dict:
     """
     # TODO Step 1: check the statement, then open the connection, limit its time, run the query,
     # and fetch the capped rows.
-    # TODO Step 2: if any of that fails, with a sqlite3.Error or a ValueError, return as_retry(error).
+    # TODO Step 2: if any of that fails, with a sqlite3.Error or a ValueError, return
+    # as_retry(error).
     # TODO Step 3: otherwise, tell retries the query succeeded, and return the rows.
     try:
         check_statement(sql)

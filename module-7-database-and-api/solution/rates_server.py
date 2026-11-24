@@ -79,7 +79,10 @@ def get_rate(date: str, from_currency: str, to_currency: str) -> dict:
     # and try again.
     if not bucket.take(MAX_WAIT_S):
         return {"error": "Too many rate requests. Wait a moment, then try again."}
-    # TODO Step 3: call the API, save the rate in the cache, and return it.
+    # TODO Step 3: call the API for the date, from the currency in key[1] to the one in key[2], and
+    # save the rate in the cache. The API answers with the date it used, which is earlier on a
+    # weekend or holiday: keep that date.
+    # Hint: https://frankfurter.dev
     response = httpx.get(
         f"{RATES_URL}/{date}", params={"base": key[1], "symbols": key[2]}, timeout=30
     )

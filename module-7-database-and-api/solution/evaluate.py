@@ -76,7 +76,7 @@ def main() -> None:
     print(
         f"Average latency: {sum(r['latency_s'] for r in rows) / n:.1f}s, average tool calls: {sum(r['calls'] for r in rows) / n:.1f}"
     )
-    # TODO: show that no write reached the ledger: its contents must be unchanged
+    # No write reached the ledger: its contents must be unchanged.
     print(f"Ledger unchanged: {fingerprint() == before}")
 
 
