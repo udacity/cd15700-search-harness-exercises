@@ -22,7 +22,9 @@ def main() -> None:
     print(f"Checked out the new tag: {git('rev-parse', '--short', 'HEAD')}\n")
 
     retrieved = verdicts = 0
-    stale_rejected = stale_total = expired_rejected = expired_total = kept = valid_total = 0
+    stale_rejected = stale_total = 0
+    expired_rejected = expired_total = 0
+    kept = valid_total = 0
     print(
         f"{'question':<9} {'expected':<9} {'top match':<10} {'verdict':<10} {'expected':<10} reason"
     )
@@ -39,11 +41,19 @@ def main() -> None:
             question["expected_memory"], {"status": "not found", "reason": ""}
         )
 
-        # TODO: retrieval is right when the closest memory is the expected one
+        print(
+            f"{question['id']:<9} {question['expected_memory']:<9} {top:<10} {expected_entry['status']:<10} "
+            f"{question['expected_verdict']:<10} {expected_entry['reason'][:70]}"
+        )
+
+        # TODO Step 1: retrieval is right when the closest memory is the expected one.
         retrieved += top == question["expected_memory"]
-        # TODO: the verdict is right when the expected memory got the expected status
+        # TODO Step 2: the verdict is right when the expected memory got the expected status.
         verdicts += expected_entry["status"] == question["expected_verdict"]
-        # TODO: count stale and expired memories that were rejected, and valid ones that were kept
+        # TODO Step 3: count the question in the totals of its expected verdict, and count it as
+        # handled when the expected memory got the right status: stale memories rejected as
+        # "stale", expired ones rejected as "expired", and valid ones kept as "valid" or
+        # "refreshed".
         if question["expected_verdict"] == "stale":
             stale_total += 1
             stale_rejected += expected_entry["status"] == "stale"
@@ -53,10 +63,6 @@ def main() -> None:
         else:
             valid_total += 1
             kept += expected_entry["status"] in ("valid", "refreshed")
-        print(
-            f"{question['id']:<9} {question['expected_memory']:<9} {top:<10} {expected_entry['status']:<10} "
-            f"{question['expected_verdict']:<10} {expected_entry['reason'][:70]}"
-        )
 
     n = len(questions)
     print(f"\nRetrieval accuracy: {retrieved} of {n}")

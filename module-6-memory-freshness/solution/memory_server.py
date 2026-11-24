@@ -1,7 +1,6 @@
 """MCP server that recalls past triage findings, but only the ones that still hold.
 
-A memory was true at the commit it was written at, but the code moves on.
-So before a memory is returned, it's checked just in time against the code at HEAD:
+Before a memory is returned, it's checked just in time against the code at HEAD:
 - valid: its files haven't changed since its commit.
 - refreshed: its files changed, but its evidence, the line it depends on, is still there,
   so it's re-verified at HEAD.
@@ -33,8 +32,9 @@ mcp = FastMCP("memory")
 
 def changed_files(memory: dict) -> list[str]:
     """The memory's files that changed between its commit and HEAD."""
-    # TODO: list the memory's files that differ between its commit SHA and HEAD.
-    # We only want the name of the files that changed
+    # TODO: list the memory's files that differ between its commit SHA and HEAD, with git from
+    # memory_store. We only want the names of the files that changed, like
+    # ["src/invoicekit/invoice.py"].
     # Hint: see the --name-only option in https://git-scm.com/docs/git-diff
     output = git(
         "diff", "--name-only", memory["commit_sha"], "HEAD", "--", *memory["files"]
@@ -49,9 +49,12 @@ def evidence_line(memory: dict) -> int | None:
     When the memory's files changed, it tells us whether the finding
     survived the change: the exact line is still there, or it was changed or removed.
     """
-    # TODO: search the memory's evidence file for the exact evidence text, with ripgrep.
-    # Hint: remember that ripgrep searches for patterns, not plain text. Our evidence is code, so it
-    # contains special characters, like ( ) { } $, that change how ripgrep reads the pattern.
+    # TODO: search the memory's evidence file for the exact evidence text, with ripgrep, and
+    # return the line number of the first match.
+    # Hint: search_structured from ripgrep_rs returns the matching lines, each with its line_number.
+    # Hint: remember that ripgrep searches for patterns, not plain text.
+    # Our evidence is code, so it contains special characters, like ( ) { } $, that change how
+    # ripgrep reads the pattern.
     hits = search_structured(
         patterns=[re.escape(memory["evidence"])],
         paths=[str(REPO / memory["evidence_file"])],
@@ -64,7 +67,8 @@ def last_changed_by(memory: dict, line: int) -> str:
 
     git blame gives, for each line of a file, the commit that last changed it.
     """
-    # TODO: blame only that line at HEAD, then get the commit's short SHA and subject with git log.
+    # TODO: blame only that line at HEAD, then get the commit's short SHA and subject with
+    # git log, like "ed7f732 Add currency formatting".
     # Hint: see the -L and --porcelain options in https://git-scm.com/docs/git-blame
     blame = git(
         "blame",
@@ -88,9 +92,9 @@ def removed_by(memory: dict) -> str:
     is the one that changed or removed it. Even a small edit to the line counts,
     because its exact text disappears.
     """
-    # TODO: run the pickaxe on the evidence file, from the memory's commit to HEAD, and keep the newest commit.
+    # TODO: run the pickaxe on the evidence file, from the memory's commit to HEAD, and keep the
+    # newest commit, as its short SHA and subject. If nothing is found, return "an unknown commit".
     # Hint: see the -S option in https://git-scm.com/docs/git-log.
-    # If nothing is found, return "an unknown commit".
     output = git(
         "log",
         "-S",
@@ -118,11 +122,14 @@ def verify(memory: dict) -> tuple[str, str]:
     Returns the status, and the reason the agent will see.
     """
     head = git("rev-parse", "HEAD")
-    # TODO Step 1: a memory from HEAD itself, or whose files haven't changed since its commit, is valid.
+    # TODO Step 1: a memory from HEAD itself, or whose files haven't changed since its commit,
+    # is valid.
     if memory["commit_sha"] == head or not changed_files(memory):
         return "valid", "its files haven't changed since its commit"
-    # TODO Step 2: if the evidence is still there, the memory is refreshed: move its commit SHA to HEAD,
-    # to record that it was re-verified there, and give the evidence's line and the commit that last changed it.
+    # TODO Step 2: if the evidence is still there, the memory is refreshed: move its commit SHA to
+    # HEAD, to record that it was re-verified there. The reason gives the evidence's line and the
+    # commit that last changed it, like "its files changed, but the evidence is still on line 42,
+    # last changed by ed7f732 Add currency formatting".
     # Hint: update_memory from memory_store changes a memory's metadata in the store.
     line = evidence_line(memory)
     if line is not None:
@@ -131,13 +138,16 @@ def verify(memory: dict) -> tuple[str, str]:
             "refreshed",
             f"its files changed, but the evidence is still on line {line}, last changed by {last_changed_by(memory, line)}",
         )
-    # TODO Step 3: otherwise, the evidence was changed or removed, so the memory is stale: give the commit that did it.
+    # TODO Step 3: otherwise, the evidence was changed or removed, so the memory is stale. The
+    # reason gives the commit that did it, like
+    # "its evidence was changed or removed by cabc169 Round VAT half up, as tax authorities do".
     return "stale", f"its evidence was changed or removed by {removed_by(memory)}"
 
 
 def expired(memory: dict) -> bool:
     """Whether a memory has gone unused for too long, and should be dropped."""
-    # TODO: a memory expires when more than MAX_UNUSED_SESSIONS sessions have passed since its last use.
+    # TODO: a memory expires when more than MAX_UNUSED_SESSIONS sessions have passed since its
+    # last use.
     return CURRENT_SESSION - memory["last_used_session"] > MAX_UNUSED_SESSIONS
 
 
@@ -150,15 +160,15 @@ def recall_memory(failure_log: str) -> dict:
     Args:
         failure_log: The error lines from the failing build.
     """
-    # TODO Step 1: search for this repo's memories closest to the failure log, with search from memory_store.
-    # Then go through them one at a time, sorting each into the usable or the rejected memories:
-    # TODO Step 2: if the memory has expired, reject it, without checking it against the code.
-    # TODO Step 3: otherwise, verify it, and save its status and reason in the store using update_memory
-    # TODO Step 4: if it's stale, reject it. The agent sees why, but not its workaround.
-    # TODO Step 5: otherwise, it's usable: mark it as used in this session, and keep its root cause and workaround.
-    # TODO Step 6: return the usable and the rejected memories.
     usable, rejected = [], []
-    for memory, distance in search(failure_log, repo=REPO_NAME, top_k=CANDIDATES):
+    # TODO Step 1: search for this repo's memories closest to the failure log, with search from
+    # memory_store. Each result is a (memory, distance) pair.
+    results = search(failure_log, repo=REPO_NAME, top_k=CANDIDATES)
+    # Sort each memory into the usable or the rejected ones.
+    for memory, distance in results:
+        # TODO Step 2: if the memory has expired, reject it, without checking it against the code.
+        # A rejected memory looks like
+        # {"id": "m07", "distance": 0.41, "status": "expired", "reason": "unused since session 1"}.
         if expired(memory):
             rejected.append(
                 {
@@ -169,6 +179,8 @@ def recall_memory(failure_log: str) -> dict:
                 }
             )
             continue
+        # TODO Step 3: otherwise, verify it, and save its status and reason in the store using
+        # update_memory.
         status, reason = verify(memory)
         update_memory(memory["id"], status=status, status_reason=reason)
         entry = {
@@ -177,9 +189,13 @@ def recall_memory(failure_log: str) -> dict:
             "status": status,
             "reason": reason,
         }
+        # TODO Step 4: if it's stale, reject it, with its status and reason. The agent sees why, but
+        # not its workaround.
         if status == "stale":
             rejected.append(entry)
             continue
+        # TODO Step 5: otherwise, it's usable: mark it as used in this session, and keep it with its
+        # status and reason, plus its session, files, root cause and workaround.
         update_memory(memory["id"], last_used_session=CURRENT_SESSION)
         usable.append(
             {
