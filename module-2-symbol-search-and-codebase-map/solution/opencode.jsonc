@@ -15,9 +15,10 @@
   "default_agent": "symbol-agent",
   "experimental": { "openTelemetry": true },
   "plugins": ["@langfuse/opencode-observability-plugin@0.5.2"],
+  // TODO: add an MCP section that registers symbol_server.py as a local server named "symbols".
+  // See https://opencode.ai/v2/docs/mcp-servers
   "mcp": {
     "servers": {
-      // TODO: register symbol_server.py as a local server named "symbols"
       "symbols": {
         "type": "local",
         "command": ["python3", "../symbol_server.py"],

@@ -29,11 +29,28 @@ def enclosing_class(node: Node) -> str | None:
 
 
 def build_index(root: Path, package: str) -> list[dict]:
-    """Every class, method and function in a package, with file and line span."""
+    """Every class, method and function in a package, with its file and line span."""
     index = []
     for path in sorted((root / package).rglob("*.py")):
+        # TODO Step 1: parse the file with PARSER, to get its syntax tree.
+        # Hint: https://tree-sitter.github.io/py-tree-sitter/classes/tree_sitter.Parser.html#tree_sitter.Parser.parse
         tree = PARSER.parse(path.read_bytes())
-        for pattern, captures in QueryCursor(DEFINITIONS).matches(tree.root_node):
+        # TODO Step 2: run the DEFINITIONS query over the tree, from its root node. Each match
+        # gives the index of the pattern it matched, 0 for a class and 1 for a function, and its
+        # captures, by name.
+        # Hint: https://tree-sitter.github.io/py-tree-sitter/classes/tree_sitter.QueryCursor.html#tree_sitter.QueryCursor.matches
+        matches = QueryCursor(DEFINITIONS).matches(tree.root_node)
+        # TODO Step 3: for each match, add one entry to index, like this one:
+        # {"name": "post", "kind": "method", "class": "Ledger",
+        #  "path": "python_accounting/models/ledger.py", "start_line": 222, "end_line": 233}
+        # - name: the text of the "name" capture.
+        # - kind: "class" or "function", from the pattern index. A function defined inside a
+        #   class is a "method".
+        # - class: the name of the class it's defined in, from enclosing_class, or None.
+        # - path: the file's path, relative to root.
+        # - start_line and end_line: where the "class" or "function" capture starts and ends.
+        #   Tree-sitter counts rows from 0, but line numbers start at 1.
+        for pattern, captures in matches:
             kind = "class" if pattern == 0 else "function"
             node = captures[kind][0]
             parent_class = enclosing_class(node)
