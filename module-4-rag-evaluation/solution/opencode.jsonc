@@ -15,9 +15,10 @@
   "default_agent": "agentic-rag-agent",
   "experimental": { "openTelemetry": true },
   "plugins": ["@langfuse/opencode-observability-plugin@0.5.2"],
+  // TODO: add an MCP section that registers rag_server.py as a local server named "rag".
+  // See https://opencode.ai/v2/docs/mcp-servers
   "mcp": {
     "servers": {
-      // TODO: register rag_server.py as a local server named "rag"
       "rag": {
         "type": "local",
         "command": ["python3", "rag_server.py"],

@@ -1,7 +1,4 @@
-"""Chunk, embed and search this module's documents with Chroma and OpenAI embeddings.
-
-The demo and the exercise share this index, so it's built (and paid for) once.
-"""
+"""Chunk, embed and search this module's documents with Chroma and OpenAI embeddings."""
 
 from __future__ import annotations
 
@@ -39,15 +36,17 @@ def load_questions() -> list[dict]:
 
 def chunk_document(document: dict, row: int) -> list[dict]:
     """Split a document into overlapping pieces. Each piece starts with the
-    document's title, so it still makes sense on its own."""
+    document's title."""
     title = document["title"] or ""
     content = document["content"] or ""
     chunks = []
-    for number, start in enumerate(range(0, max(len(content), 1), CHUNK_CHARS - OVERLAP_CHARS)):
+    for number, start in enumerate(
+        range(0, max(len(content), 1), CHUNK_CHARS - OVERLAP_CHARS)
+    ):
         chunks.append(
             {
                 "chunk_id": f"{row}-{number}",  # the dataset repeats a few document IDs
-                "text": f"{title}\n\n{content[start:start + CHUNK_CHARS]}",
+                "text": f"{title}\n\n{content[start : start + CHUNK_CHARS]}",
                 "metadata": {
                     "doc_id": document["doc_id"],
                     "title": title,
@@ -76,7 +75,11 @@ def collection() -> chromadb.Collection:
 
 def build_index() -> None:
     """Chunk every document, embed the chunks and store them, unless that's done."""
-    chunks = [chunk for row, document in enumerate(load_documents()) for chunk in chunk_document(document, row)]
+    chunks = [
+        chunk
+        for row, document in enumerate(load_documents())
+        for chunk in chunk_document(document, row)
+    ]
     store = collection()
     if store.count() == len(chunks):
         print(f"The index already has all {len(chunks)} chunks.")
@@ -84,7 +87,7 @@ def build_index() -> None:
     characters = sum(len(chunk["text"]) for chunk in chunks)
     print(f"Embedding {len(chunks)} chunks, about {characters // 4:,} tokens.")
     for start in range(0, len(chunks), BATCH_SIZE):
-        batch = chunks[start:start + BATCH_SIZE]
+        batch = chunks[start : start + BATCH_SIZE]
         store.upsert(
             ids=[chunk["chunk_id"] for chunk in batch],
             documents=[chunk["text"] for chunk in batch],

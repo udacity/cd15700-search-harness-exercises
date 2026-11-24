@@ -95,44 +95,47 @@ def retrieved_doc_ids(results: list[dict]) -> list[str]:
 
 
 def document_recall(retrieved: list[str], gold: list[str]) -> float | None:
-    """The share of gold documents that were retrieved. None if there are no gold documents."""
-    # TODO: return None when there are no gold documents
+    """The share of gold documents that were retrieved."""
+    # TODO Step 1: return None when the question has no gold documents.
     if not gold:
         return None
-    # TODO: return the share of gold documents found in `retrieved`
+    # TODO Step 2: return recall = (gold documents found in retrieved) / (gold documents).
     return len(set(gold) & set(retrieved)) / len(gold)
 
 
 def precision_at_5(retrieved: list[str], gold: list[str]) -> float | None:
     """The share of the first five retrieved documents that are gold documents."""
-    # TODO: return None when there are no gold documents
+    # TODO Step 1: return None when the question has no gold documents.
     if not gold:
         return None
-    # TODO: count the gold documents among the first five retrieved, divided by five
+    # TODO Step 2: return precision@5 = (gold documents among the first five retrieved) / 5.
+    # For example, 2 gold documents in the first five give 2 / 5 = 0.4. Divide by 5 even when
+    # fewer than five were retrieved: a missing result counts as a miss.
     return len(set(retrieved[:5]) & set(gold)) / 5
 
 
 def completeness(answer: str, facts: list[str]) -> float:
-    """The share of the answer facts that the answer states, according to the judge."""
-    # TODO: ask the judge, for each fact, whether the answer states it
+    """The share of the question's answer facts that the answer states, according to the judge."""
+    # TODO Step 1: for each fact, ask the judge whether the answer states it. Use the judge
+    # function above.
     found = [
         judge(f"Answer:\n{answer}\n\nDoes this answer state this fact?\n{fact}")
         for fact in facts
     ]
-    # TODO: return the share of facts found
+    # TODO Step 2: return the share of facts the answer states, or 0.0 when there are none.
     return sum(found) / len(facts) if facts else 0.0
 
 
 def faithfulness(answer: str, chunks: list[dict], category: str) -> float | None:
-    """1.0 if the judge finds every claim in the answer supported by the retrieved chunks.
-
-    None for questions whose answer isn't in the documents"""
-    # TODO: skip questions whose answer isn't in the documents
-    # Hint: their question_type in data/questions.jsonl is "info_not_found".
+    """1.0 if the judge finds every claim in the answer supported by the retrieved chunks,
+    0.0 if not."""
+    # TODO Step 1: return None for questions whose answer isn't in the documents: their
+    # question_type, in data/questions.jsonl, is "info_not_found".
     if category == "info_not_found":
         return None
+    # TODO Step 2: ask the judge whether every claim in the answer is supported by the text of
+    # the retrieved chunks.
     context = "\n\n".join(chunk["text"] for chunk in chunks)
-    # TODO: ask the judge whether every claim in the answer is supported by the context
     supported = judge(
         f"Context:\n{context}\n\nAnswer:\n{answer}\n\n"
         "Is every claim in the answer supported by the context?"
