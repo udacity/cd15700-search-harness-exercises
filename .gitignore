@@ -1,3 +1,25 @@
 .DS_Store
 .vscode
 
+.venv
+__pycache__/
+.env
+
+python-accounting/
+.opencode/node_modules
+.opencode/package.json
+.opencode/package-lock.json
+.opencode/bun.lock
+.opencode/.gitignore
+chroma_db/
+module-5-document-extraction/data/pdfs/
+module-5-document-extraction/data/ground_truth.json
+module-5-document-extraction/data/dataset.jsonl.gz
+module-5-document-extraction/solution/results/
+module-6-memory-freshness/data/repo/
+module-6-memory-freshness/data/ci_logs/
+module-6-memory-freshness/data/sessions/
+module-6-memory-freshness/data/eval/
+module-6-memory-freshness/memory_store/
+module-8-multi-source-research/demo/runs/
+module-8-multi-source-research/solution/runs/
