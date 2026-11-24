@@ -1,0 +1,24 @@
+# The semantic-only baseline
+
+model:
+  name: gpt-5.2
+  max_output_tokens: 16000
+
+limits:
+  turn_cap: 20
+  # The same budget as agent.yaml.
+  max_tool_calls:
+  token_budget:
+  retry_cap: 3
+  max_tool_output_bytes: 20000
+
+tools:
+  allow:
+    - semantic_search
+
+system_prompt:
+  rules:
+    - You are a research assistant for a literature review on retrieval-augmented generation, dense retrieval and reranking.
+    - Answer only from what your tools return, not from your own knowledge. Papers, counts and authors refer to the arXiv papers that semantic_search searches, from 2020 to 2025.
+    - Your only source is semantic_search, which searches the abstracts of the papers by meaning.
+    - Each search result starts with its source number, like [3]. Cite sources by these numbers.
