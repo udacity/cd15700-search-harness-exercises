@@ -6,6 +6,7 @@ model:
 
 limits:
   turn_cap: 20
+  # The same budget as agent.yaml.
   max_tool_calls: 8
   token_budget: 80000
   retry_cap: 3

@@ -74,9 +74,7 @@ class Sources:
 
     def add(self, output: str) -> int:
         """Record one search result, and return its number."""
-        # TODO Step 1: record the result into results
         self.results.append(output)
-        # TODO Step 2: return the result's number: its position, counting from 1.
         return len(self.results)
 
     def is_valid(self, number: int) -> bool:
@@ -126,34 +124,36 @@ class ResearchLoop(AgentLoop):
 
         # TODO Step 1: get the plan.
         self.plan = self._plan(messages)
-        # TODO Step 2: search in rounds.
-        # Before each round, check the budget.
-        # After each one, reflect, then apply the stopping rules.
-        # Record why the search stopped in stopped_by.
+        # Search in rounds, until the budget runs out or a stopping rule ends the search.
         self.stopped_by = "budget"
         while not self._budget_used_up():
+            # TODO Step 2: run one search round.
             self._search_round(messages, schemas)
+            # TODO Step 3: reflect, then apply the stopping rules. When one of them ends the search,
+            # record why in stopped_by, and stop.
             reason = self._stop_reason(self._reflect(messages))
             if reason:
                 self.stopped_by = reason
                 break
-        # TODO Step 3: write the final answer, and finish the run with it as text.
+        # TODO Step 4: write the final answer.
+        self.answer = self._final_answer(messages)
+        # TODO Step 5: finish the run with the answer as text.
         # Hint: _finish(messages, text), from AgentLoop in harness/loop.py, adds the answer to the
         # conversation and returns the RunResult. render() turns an Answer into text.
-        self.answer = self._final_answer(messages)
-        return self._finish(messages, render(self.answer))
+        result = self._finish(messages, render(self.answer))
+        return result
 
     def _plan(self, messages: list[Message]) -> Plan:
         """Ask the model for the plan, and add it to the conversation."""
-        # TODO: ask with the PLAN instruction, the Plan schema and no tools.
+        # TODO Step 1: ask with the PLAN instruction, the Plan schema and no tools.
         # Hint: _ask(messages, schemas, schema), from AgentLoop in harness/loop.py, makes one model
         # call and counts its tokens.
-        # Hint: Make sure to add the Plan schema to get a structured output the harness can parse
+        # Hint: pass the Plan schema, so the harness gets a structured answer it can parse.
         plan = self._ask(
             messages + [Message(role="user", content=PLAN)], [], Plan
         ).parsed
-        # TODO: Add the plan to the conversation as numbered sub-questions, as the model's own
-        # turn.
+        # TODO Step 2: add the plan to the conversation as numbered sub-questions, as the
+        # model's own turn.
         messages.append(
             Message(
                 role="assistant", content=f"My plan:\n{numbered(plan.sub_questions)}"
@@ -186,7 +186,7 @@ class ResearchLoop(AgentLoop):
     def _reflect(self, messages: list[Message]) -> Reflection:
         """Ask which sub-questions the sources answer so far."""
         # TODO Step 1: ask with the REFLECT instruction, the Reflection schema and no tools.
-        # Hint: Make sure to add the Reflection schema to get a structured output the harness can parse
+        # Hint: pass the Reflection schema, so the harness gets a structured answer it can parse.
         reflection = self._ask(
             messages + [Message(role="user", content=REFLECT)], [], Reflection
         ).parsed
@@ -234,13 +234,13 @@ class ResearchLoop(AgentLoop):
         if open_questions:
             instruction += " List these as gaps: " + "; ".join(open_questions)
         # TODO Step 2: ask with that instruction, the Answer schema and no tools.
-        # Hint: Make sure to add the Answer schema to get a structured output the harness can parse
+        # Hint: pass the Answer schema, so the harness gets a structured answer it can parse.
         answer = self._ask(
             messages + [Message(role="user", content=instruction)], [], Answer
         ).parsed
 
         # TODO Step 3: check every cited number with Sources.is_valid. Count the citations,
-        # and the valid ones, in citation_check.
+        # and the valid ones, in citation_check, as a pair: (5, 4) means 5 citations, 4 valid.
         cited = [n for claim in answer.claims for n in claim.sources]
         self.citation_check = (len(cited), sum(self.sources.is_valid(n) for n in cited))
 

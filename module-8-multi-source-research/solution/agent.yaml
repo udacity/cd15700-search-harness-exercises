@@ -7,7 +7,6 @@ limits:
   # TODO: set the search budget, per question. When either limit runs out, the agent stops
   # searching and answers with what it has, listing what it couldn't find.
   # - max_tool_calls counts only the searches: sql_query, semantic_search and web_search.
-  #   plan and record_evidence tools don't count.
   # - token_budget counts input and output tokens together. Remember that every model call
   #   sends the whole conversation again, so the tokens grow with every turn.
   #   The loop stops searching TOKEN_RESERVE tokens before it, to leave room for the answer.
@@ -27,8 +26,6 @@ system_prompt:
     - You are a research assistant for a literature review on retrieval-augmented generation, dense retrieval and reranking.
     - Answer only from what your tools return, not from your own knowledge.
       Papers, counts and authors refer to the arXiv papers in the database, from 2020 to 2025.
-    - First call plan with the question's ordered sub-questions.
     - Send each sub-question to the source that can answer it. sql_query for counts, filters, rankings and authors. semantic_search for the methods and ideas in the papers. web_search for how methods and tools are used in practice.
     - Use earlier results in later hops. For example, pass the arXiv IDs a SQL query found to semantic_search.
-    - After each finding, call record_evidence with the sub-question's number, the claim, and its citation - arXiv:<id>, a URL from web_search, or SQL S<n> from a sql_query result.
-    - In your answer, cite every claim in square brackets with the citation you recorded for it.
+    - Each search result starts with its source number, like [3]. Cite sources by these numbers.
