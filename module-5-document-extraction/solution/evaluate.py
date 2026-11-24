@@ -57,8 +57,7 @@ def score_document(record: dict, truth: dict) -> tuple[dict[str, bool | None], b
     invoice = AdBuyInvoice.model_validate(record["invoice"])
     scores = {field: field_correct(field, invoice, truth) for field in FIELDS}
     scores["line_items"] = line_items_correct(invoice, truth)
-    # TODO: a document is wrong when at least one field disagrees with the ground truth.
-    # Hint: a None score isn't wrong, so test for False, not for "not correct".
+    # A None score has nothing to check, so it isn't wrong.
     wrong = any(correct is False for correct in scores.values())
     return scores, wrong
 
@@ -94,18 +93,16 @@ def escalation(rows: list[dict], threshold: float) -> dict:
                       Low precision wastes the reviewer's time on correct invoices.
 
     Raising the threshold escalates more invoices: fewer errors are missed, but a
-    person has more invoices to check. main() prints this for several thresholds,
-    to choose one.
+    person has more invoices to check.
     """
-    # TODO: Step 1. Find the escalated invoices: confidence below the threshold.
+    # TODO Step 1: find the escalated invoices: their confidence is below the threshold.
     escalated = [row for row in rows if row["confidence"] < threshold]
-    # TODO: Step 2. Find the wrong invoices, and the wrong ones that were escalated.
-    # Hint: each row's "wrong" was set by score_document, which compares
-    # the extraction with the ground truth (data/ground_truth.json).
+    # TODO Step 2: find the wrong invoices, and the wrong ones that were escalated.
+    # Hint: each row's "wrong" comes from score_document.
     wrong = [row for row in rows if row["wrong"]]
     caught = [row for row in escalated if row["wrong"]]
-    # TODO: Step 3. Compute the counts and the precision described above.
-    # Hint: return None when there's nothing to divide by, e.g. nothing escalated.
+    # TODO Step 3: fill in the counts and the precision described above. Precision is None when
+    # nothing was escalated.
     return {
         "escalated": len(escalated),
         "auto_processed": len(rows) - len(escalated),
