@@ -1,0 +1,29 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "openai/gpt-5.2",
+  "providers": {
+    "openai": {
+      "settings": {
+        "apiKey": "{env:OPENAI_API_KEY}",
+        "baseURL": "{env:OPENAI_BASE_URL}"
+      }
+    }
+  },
+  "permissions": [
+    { "action": "*", "resource": "*", "effect": "deny" }
+  ],
+  "default_agent": "symbol-agent",
+  "experimental": { "openTelemetry": true },
+  "plugins": ["@langfuse/opencode-observability-plugin@0.5.2"],
+  // TODO: add an MCP section that registers symbol_server.py as a local server named "symbols".
+  // See https://opencode.ai/v2/docs/mcp-servers
+  "mcp": {
+    "servers": {
+      "symbols": {
+        "type": "local",
+        "command": ["python3", "../symbol_server.py"],
+        "codemode": false
+      }
+    }
+  }
+}
